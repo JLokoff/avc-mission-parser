@@ -1,0 +1,9 @@
+# Generated from schema.py; native wrapper only differs between models.
+# Vocabulary restriction only. Cross-field consistency is scored separately.
+root ::= "<tool_call>\n{\"name\": \"set_leader_intent\", \"arguments\": {\"target_color\": \"" target-color "\", \"avoid_region\": \"" avoid-region "\", \"stay_region\": \"" stay-region "\", \"until_region\": \"" until-region "\", \"target_location\": \"" target-location "\", \"action\": \"" action "\"}}\n</tool_call>"
+target-color ::= "blue" | "red" | "yellow" | "black" | "unspecified"
+avoid-region ::= "NW" | "NE" | "SW" | "SE" | "N" | "S" | "E" | "W" | "none"
+stay-region ::= "NW" | "NE" | "SW" | "SE" | "N" | "S" | "E" | "W" | "pathway" | "none"
+until-region ::= "NW" | "NE" | "SW" | "SE" | "N" | "S" | "E" | "W" | "none"
+target-location ::= "NW" | "NE" | "SW" | "SE" | "unspecified"
+action ::= "collect_target" | "read_chip" | "abort" | "return_to_start" | "report_status" | "pause" | "resume" | "retry_read" | "retry_send"

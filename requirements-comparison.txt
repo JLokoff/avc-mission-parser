@@ -1,0 +1,8 @@
+# Core versions retained from the supplied project; install torch separately.
+transformers==5.17.0
+peft==0.21.0
+accelerate==1.15.0
+huggingface_hub==1.32.0
+safetensors==0.8.0
+psutil==7.2.2
+sentencepiece==0.2.1

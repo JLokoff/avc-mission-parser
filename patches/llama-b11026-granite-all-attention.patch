@@ -1,0 +1,30 @@
+diff --git a/conversion/granite.py b/conversion/granite.py
+index 3436e8e..bb39acb 100644
+--- a/conversion/granite.py
++++ b/conversion/granite.py
+@@ -395,12 +395,25 @@ class GraniteHybridModel(Mamba2Model, GraniteMoeModel):
+     model_arch = gguf.MODEL_ARCH.GRANITE_HYBRID
+     undo_permute = True
+ 
+     def __init__(self, *args, **kwargs):
+ 
+         # Hybrid mamba models use a prefix for the mamba-specific params.
+         # TODO: Extend this if the prefix(es) need to be configurable
+         self.hparam_prefixes = ["mamba"]
++
++        # AVC_GRANITE_ALL_ATTENTION_WRITER_FIX: Granite 4.0 350M keeps the
++        # hybrid HF wrapper but contains only attention layers. Select the
++        # standard Granite GGUF architecture before ModelBase creates the
++        # writer; changing model_arch afterward leaves general.architecture as
++        # granitehybrid and makes llama.cpp require nonexistent SSM tensors.
++        hparams = kwargs.get("hparams")
++        if hparams is None:
++            hparams = ModelBase.load_hparams(args[0], False)
++            kwargs["hparams"] = hparams
++        layer_types = hparams.get("layer_types")
++        if layer_types and all(layer_type in ("attention", "full_attention") for layer_type in layer_types):
++            self.model_arch = gguf.MODEL_ARCH.GRANITE
+ 
+         super().__init__(*args, **kwargs)
+ 
+         # Lists of which layers use ssm vs attention

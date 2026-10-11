@@ -1,0 +1,15 @@
+{
+  "model_key": "lfm350",
+  "source": {
+    "model_key": "lfm350",
+    "repo_id": "LiquidAI/LFM2.5-350M",
+    "revision": "9e6c6ccf47cd318696e137d381a7ded8fe4df09f"
+  },
+  "schema_sha256": "b06cb3f6a01ccf1fb0b58c2e4ff77999059adebbe95ddf421ddc8a87e2551d73",
+  "prefix": "<|startoftext|><|im_start|>system\nYou are a model that can do function calling with the following functions\nList of tools: [{\"name\": \"set_leader_intent\", \"description\": \"Extract the structured Leader's Intent from a judge's spoken/text command during the AVC Mission Bird Dog challenge.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"target_color\": {\"type\": \"string\", \"enum\": [\"blue\", \"red\", \"yellow\", \"black\", \"unspecified\"], \"description\": \"Color of the target object, or unspecified if no target object is named.\"}, \"target_location\": {\"type\": \"string\", \"enum\": [\"NW\", \"NE\", \"SW\", \"SE\", \"unspecified\"], \"description\": \"Field quadrant of the target, or unspecified if not stated.\"}, \"avoid_region\": {\"type\": \"string\", \"enum\": [\"NW\", \"NE\", \"SW\", \"SE\", \"N\", \"S\", \"E\", \"W\", \"none\"], \"description\": \"Region the vehicle must keep out of, or none if no keep-out region was stated.\"}, \"stay_region\": {\"type\": \"string\", \"enum\": [\"NW\", \"NE\", \"SW\", \"SE\", \"N\", \"S\", \"E\", \"W\", \"pathway\", \"none\"], \"description\": \"Region the vehicle must remain inside, or none if no containment region was stated.\"}, \"until_region\": {\"type\": \"string\", \"enum\": [\"NW\", \"NE\", \"SW\", \"SE\", \"N\", \"S\", \"E\", \"W\", \"none\"], \"description\": \"Region that releases the stay_region constraint once reached, or none if the constraint has no stated end.\"}, \"action\": {\"type\": \"string\", \"enum\": [\"collect_target\", \"read_chip\", \"abort\", \"return_to_start\", \"report_status\", \"pause\", \"resume\", \"retry_read\", \"retry_send\"], \"description\": \"The action the vehicle system should take.\"}}, \"required\": [\"target_color\", \"avoid_region\", \"stay_region\", \"until_region\", \"target_location\", \"action\"]}}]<|im_end|>\n<|im_start|>user\n",
+  "suffix": "<|im_end|>\n<|im_start|>assistant\n",
+  "stop": [
+    "<|im_end|>"
+  ],
+  "max_new_tokens": 256
+}

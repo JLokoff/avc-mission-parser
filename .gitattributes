@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.jsonl text eol=lf
+*.patch text eol=lf
+*.gz binary

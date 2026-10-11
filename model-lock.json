@@ -1,0 +1,17 @@
+{
+  "functiongemma": {
+    "model_key": "functiongemma",
+    "repo_id": "google/functiongemma-270m-it",
+    "revision": "39eccb091651513a5dfb56892d3714c1b5b8276c"
+  },
+  "granite350": {
+    "model_key": "granite350",
+    "repo_id": "ibm-granite/granite-4.0-350m",
+    "revision": "bd8a1497065c0d6ba1ef19af6b0d2b14bacf71c2"
+  },
+  "lfm350": {
+    "model_key": "lfm350",
+    "repo_id": "LiquidAI/LFM2.5-350M",
+    "revision": "9e6c6ccf47cd318696e137d381a7ded8fe4df09f"
+  }
+}

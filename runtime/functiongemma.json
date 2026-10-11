@@ -1,0 +1,15 @@
+{
+  "model_key": "functiongemma",
+  "source": {
+    "model_key": "functiongemma",
+    "repo_id": "google/functiongemma-270m-it",
+    "revision": "39eccb091651513a5dfb56892d3714c1b5b8276c"
+  },
+  "schema_sha256": "b06cb3f6a01ccf1fb0b58c2e4ff77999059adebbe95ddf421ddc8a87e2551d73",
+  "prefix": "<bos><start_of_turn>developer\nYou are a model that can do function calling with the following functions<start_function_declaration>declaration:set_leader_intent{description:<escape>Extract the structured Leader's Intent from a judge's spoken/text command during the AVC Mission Bird Dog challenge.<escape>,parameters:{properties:{action:{description:<escape>The action the vehicle system should take.<escape>,enum:[<escape>collect_target<escape>,<escape>read_chip<escape>,<escape>abort<escape>,<escape>return_to_start<escape>,<escape>report_status<escape>,<escape>pause<escape>,<escape>resume<escape>,<escape>retry_read<escape>,<escape>retry_send<escape>],type:<escape>STRING<escape>},avoid_region:{description:<escape>Region the vehicle must keep out of, or none if no keep-out region was stated.<escape>,enum:[<escape>NW<escape>,<escape>NE<escape>,<escape>SW<escape>,<escape>SE<escape>,<escape>N<escape>,<escape>S<escape>,<escape>E<escape>,<escape>W<escape>,<escape>none<escape>],type:<escape>STRING<escape>},stay_region:{description:<escape>Region the vehicle must remain inside, or none if no containment region was stated.<escape>,enum:[<escape>NW<escape>,<escape>NE<escape>,<escape>SW<escape>,<escape>SE<escape>,<escape>N<escape>,<escape>S<escape>,<escape>E<escape>,<escape>W<escape>,<escape>pathway<escape>,<escape>none<escape>],type:<escape>STRING<escape>},target_color:{description:<escape>Color of the target object, or unspecified if no target object is named.<escape>,enum:[<escape>blue<escape>,<escape>red<escape>,<escape>yellow<escape>,<escape>black<escape>,<escape>unspecified<escape>],type:<escape>STRING<escape>},target_location:{description:<escape>Field quadrant of the target, or unspecified if not stated.<escape>,enum:[<escape>NW<escape>,<escape>NE<escape>,<escape>SW<escape>,<escape>SE<escape>,<escape>unspecified<escape>],type:<escape>STRING<escape>},until_region:{description:<escape>Region that releases the stay_region constraint once reached, or none if the constraint has no stated end.<escape>,enum:[<escape>NW<escape>,<escape>NE<escape>,<escape>SW<escape>,<escape>SE<escape>,<escape>N<escape>,<escape>S<escape>,<escape>E<escape>,<escape>W<escape>,<escape>none<escape>],type:<escape>STRING<escape>}},required:[<escape>target_color<escape>,<escape>avoid_region<escape>,<escape>stay_region<escape>,<escape>until_region<escape>,<escape>target_location<escape>,<escape>action<escape>],type:<escape>OBJECT<escape>}}<end_function_declaration><end_of_turn>\n<start_of_turn>user\n",
+  "suffix": "<end_of_turn>\n<start_of_turn>model\n",
+  "stop": [
+    "<end_of_turn>"
+  ],
+  "max_new_tokens": 256
+}

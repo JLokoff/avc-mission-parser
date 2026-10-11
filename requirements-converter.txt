@@ -1,0 +1,6 @@
+# Separate environment for the pinned llama.cpp converter; do not install in training .venv.
+torch==2.11.0
+transformers==4.57.6
+gguf==0.19.0
+setuptools==81.0.0
+sentencepiece==0.2.1
