@@ -1,5 +1,7 @@
 # AVC Mission Parser
 
+[![Current automated checks](https://github.com/JLokoff/avc-mission-parser/actions/workflows/checks.yml/badge.svg?branch=main)](https://github.com/JLokoff/avc-mission-parser/actions/workflows/checks.yml)
+
 Turn a human mission command into six structured fields for an autonomy stack. Train and compare **FunctionGemma 270M**, **LFM2.5 350M**, and **Granite 4.0 350M** on the same frozen Schema V3 data, then deploy locally with llama.cpp.
 
 **Input:** “Stay to the south until you reach the eastern half, then collect the blue object in the northeast.”
@@ -80,7 +82,7 @@ Replace `mps` with `cuda` for a supported NVIDIA GPU or `cpu` for CPU training. 
 
 Full training uses LoRA rank 16, alpha 32, dropout 0.05, all linear layers, FP32, batch size 1, gradient accumulation 8, learning rate 0.0002, 504 optimizer steps, and seed 42. Completion tokens alone contribute to training loss. Evaluation uses deterministic greedy generation with a 256-token output cap.
 
-The dataset contains **2,932 training rows representing 1,551 normalized unique commands**; repeated rows intentionally weight selected examples. Evaluation contains **792 rows across nine frozen files**. Do not regenerate, deduplicate, or tune on these evaluation labels while claiming a direct comparison. Dataset hashes and overlap checks run automatically.
+The dataset contains **2,932 training rows representing 1,551 normalized unique commands**; repeated rows intentionally weight selected examples. Evaluation contains **792 rows across nine frozen files**. Do not regenerate, deduplicate, or tune on these evaluation labels while claiming a direct comparison. Dataset hashes and overlap checks run automatically. See the [data folder guide](data/README.md) for a plain-language explanation of every held-out file.
 
 Resume an interrupted full training run with an existing checkpoint:
 
@@ -100,7 +102,7 @@ python -m venv .venv-convert
 
 Choose `--backend cpu` or `--backend cuda` on other hardware. On Windows the converter executable is `.venv-convert\Scripts\python.exe`. For Orin, use `--backend cuda --cuda-arch 87`; see [SETUP.md](docs/SETUP.md).
 
-The setup script pins llama.cpp to `b11026` / `b49650adb31f2e49a0d76113aeb1792134fd8413` and applies the included Granite converter patch. Use a separate converter environment: the recorded workflow uses Transformers 5 for training and Transformers 4.57.6 for conversion. Keep the training environment active when running repository commands.
+The setup script pins llama.cpp to `b11026` / `b49650adb31f2e49a0d76113aeb1792134fd8413` and applies the included [Granite converter patch](patches/README.md). Use a separate converter environment: the recorded workflow uses Transformers 5 for training and Transformers 4.57.6 for conversion. Keep the training environment active when running repository commands.
 
 ## 4. Merge and quantize
 
@@ -213,6 +215,8 @@ Shared code lives in `core/` so the same logic is not copied into every script. 
 **Existing users:** the schema, data, model settings, and existing GGUF files have not changed. Use the new script names below. Old unfinished training runs should be resumed with the code that created them; the training-code check intentionally rejects resuming under this reorganized version. Completed adapters and compatible GGUF files can still be reused.
 
 ## Checks and troubleshooting
+
+The badge at the top links to the current checks. Each GitHub Actions run belongs to the code version that triggered it: a later fix does not change an old red run into a green one. A macOS capacity notice means GitHub’s test computers are busy, not that your Mac or model failed. HTTP 400 responses in the input-validation test are intentional checks that bad requests are rejected.
 
 ```bash
 python scripts/09_check_project.py

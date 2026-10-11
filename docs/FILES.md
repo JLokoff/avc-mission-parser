@@ -68,6 +68,8 @@ Check that the repository still works after a code change. These quick tests ins
 
 ## Data and configuration
 
+**`data/README.md`** — Explains training versus held-out evaluation, lists every dataset and its row count, and explains why JSON Lines files cannot have comment headers.
+
 **`data/train_set.jsonl`** — The 2,932 training examples (1,551 normalized unique commands), with expected mission fields. Repetition intentionally gives some examples more training weight. This is the only file used for learning.
 
 **`data/eval_set.jsonl`, `data/heldout_set.jsonl`, and `data/heldout2_set.jsonl` through `data/heldout8_set.jsonl`** — Nine evaluation files totaling 792 commands. Their separation records where the test groups came from; combining or regenerating them would change the locked comparison. Each line pairs a command with its expected answer.
@@ -79,6 +81,8 @@ Check that the repository still works after a code change. These quick tests ins
 **`gguf/functiongemma-v3.gbnf`, `gguf/lfm350-v3.gbnf`, and `gguf/granite350-v3.gbnf`** — The allowed output-format rules for each model. They differ because the models write function calls differently. They constrain structure, not whether the chosen action or color is correct.
 
 **`requirements-comparison.txt`** — Python libraries used for training and PyTorch evaluation. **`requirements-converter.txt`** — Libraries for a separate conversion environment. They stay separate because the recorded training and conversion workflows need different library versions.
+
+**`patches/README.md`** — Explains what a patch is, why this Granite fix is needed, and when it is applied.
 
 **`patches/llama-b11026-granite-all-attention.patch`** — The small compatibility fix applied to the pinned llama.cpp converter for this Granite model. Step 00 applies it automatically; do not delete it while using that pinned converter.
 
