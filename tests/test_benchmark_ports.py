@@ -42,7 +42,16 @@ class PortTests(unittest.TestCase):
                 conn.shutdown(socket.SHUT_WR)
                 self.assertEqual(client.recv(1), b'')
                 conn.close()
-        self.assertEqual(benchmark.select_server_port(port), port)
+        try:
+            selected = benchmark.select_server_port(port)
+        except RuntimeError:
+            # Windows exclusive binding can retain TIME_WAIT. Automatic mode
+            # must still work, without borrowing another process's socket.
+            if not hasattr(socket, 'SO_EXCLUSIVEADDRUSE'):
+                raise
+            self.assertGreater(benchmark.select_server_port(), 0)
+            return
+        self.assertEqual(selected, port)
         with socket.socket() as next_server:
             next_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             next_server.bind(('127.0.0.1', port))

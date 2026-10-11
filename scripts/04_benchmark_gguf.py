@@ -152,13 +152,16 @@ def benchmark(args):
 def select_server_port(requested=None):
     """Use an OS-selected port by default; reject live listeners on explicit ports.
 
-    SO_REUSEADDR permits an explicit port with closed connections in TIME_WAIT.
-    listen() also checks for a live listener; bind() alone is not sufficient when
-    address reuse is enabled. The reservation ends before llama-server starts;
+    On Unix, SO_REUSEADDR permits closed connections in TIME_WAIT and listen()
+    rejects live listeners. Windows requires SO_EXCLUSIVEADDRUSE instead: reuse
+    can otherwise bind over another server. A recently closed explicit Windows
+    port may remain unavailable; automatic ports avoid that wait.
+    The reservation ends before llama-server starts;
     startup failure and model-path checks remain necessary for that small race.
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        option = getattr(socket, 'SO_EXCLUSIVEADDRUSE', socket.SO_REUSEADDR)
+        sock.setsockopt(socket.SOL_SOCKET, option, 1)
         try:
             sock.bind(('127.0.0.1', requested if requested is not None else 0))
             sock.listen(1)
