@@ -1,4 +1,9 @@
-"""Run after scripts/serve.py: python examples/http_client.py"""
+"""
+Send one example mission command to the already running local HTTP API and print its
+response. Start step 06 first, then run python examples/http_client.py. This
+demonstrates how a separate team program can use the parser without loading a model
+itself.
+"""
 import json
 import urllib.request
 req = urllib.request.Request('http://127.0.0.1:8080/parse',

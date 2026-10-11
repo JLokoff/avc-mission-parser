@@ -1,10 +1,14 @@
-"""Real socket regression tests; does not load a model or start llama-server."""
+"""
+Checks that benchmark servers can find a free local port, avoid an occupied port, and
+run one after another. These tests use small local network connections but do not load
+models.
+"""
 import importlib.util
 from pathlib import Path
 import socket
 import unittest
 
-spec = importlib.util.spec_from_file_location('gguf_benchmark', Path(__file__).resolve().parents[1] / 'scripts/04_benchmark_gguf.py')
+spec = importlib.util.spec_from_file_location('gguf_benchmark', Path(__file__).resolve().parents[1] / 'scripts/05_benchmark_models.py')
 benchmark = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(benchmark)
 

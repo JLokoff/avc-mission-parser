@@ -1,6 +1,11 @@
-"""Render the same six-field enum grammar in each model's native call syntax."""
+"""
+Builds the allowed answer-format rules for each model. These rules keep generated
+answers within the field names and values in Schema V3; they do not choose the correct
+answer for the model. The conversion and inference code use this automatically.
+"""
+# Previously: build_grammars.py
 import json
-from comparison_common import ROOT, MODELS, FIELDS, ENUMS, completion, stop_tokens
+from model_common import ROOT, MODELS, FIELDS, ENUMS, completion, stop_tokens
 
 
 def grammar(key):

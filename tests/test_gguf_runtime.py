@@ -1,7 +1,10 @@
-"""Regressions for corrupted Metal output and the Granite compatibility profile."""
+"""
+Checks that invalid numerical outputs are caught and that the known Mac settings are
+applied only where needed. It uses small sample responses rather than loading a model.
+"""
 import unittest
 from unittest.mock import patch
-from gguf_runtime import check_generation, default_ubatch
+from runtime_checks import check_generation, default_ubatch
 
 
 def response(value, selected=None):
@@ -29,12 +32,12 @@ class RuntimeTests(unittest.TestCase):
             check_generation({'error': 'grammar failed'})
 
     def test_only_mac_granite_gpu_changes_default(self):
-        with patch('gguf_runtime.sys.platform', 'darwin'):
+        with patch('runtime_checks.sys.platform', 'darwin'):
             self.assertEqual(default_ubatch('granite350', 99), 8)
             self.assertEqual(default_ubatch('granite350', 0), 512)
             self.assertEqual(default_ubatch('functiongemma', 99), 512)
             self.assertEqual(default_ubatch('lfm350', 99), 512)
-        with patch('gguf_runtime.sys.platform', 'linux'):
+        with patch('runtime_checks.sys.platform', 'linux'):
             self.assertEqual(default_ubatch('granite350', 99), 512)
 
 

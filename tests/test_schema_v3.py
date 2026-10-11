@@ -1,6 +1,6 @@
 """Standing check for schema v3. Run after any builder or schema change:
 
-    python scripts/test_schema_v3.py
+    python tests/test_schema_v3.py
 
 Guards the three things that have silently broken before:
   1. a data file carrying fields the schema no longer has (the v2 `constraints` key),
@@ -16,7 +16,7 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'core'))
 from schema import FIELDS, FUNCTION_SCHEMA  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,8 +45,8 @@ def check_data():
 
 
 def check_grammar():
-    from comparison_common import MODELS
-    from build_grammars import grammar
+    from model_common import MODELS
+    from output_grammar import grammar
     for key in MODELS:
         path = os.path.join(ROOT, 'gguf', key + '-v3.gbnf')
         assert open(path, encoding='utf-8').read() == grammar(key), 'Grammar drift: ' + key

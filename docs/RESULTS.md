@@ -32,9 +32,8 @@ Reference hardware: M4 MacBook Pro, 16 GB unified memory. All scores below use 7
 | Q8_0 shuffled | 758/792 (95.71%) | 0.345 s | 0.388 s |
 | Q6_K | 757/792 (95.58%) | 0.301 s | 0.340 s |
 | Q4_K_M | 736/792 (92.93%) | 0.270 s | 0.303 s |
-| Q3_K_M | 628/792 (79.29%) | 0.315 s | 0.341 s |
 
-Cached Q8/Q6/Q4/Q3 outputs matched their corresponding uncached outputs exactly on this set. Q8 was additionally shuffled with no changes. The fresh 40-command Q8 timing sample measured 1.088 s uncached versus 0.350 s cached; the median per-command speedup was 3.114×. Prefix preparation itself took 0.739–0.758 s, separately from model loading. Q6/Q4/Q3 cached tests did not repeat the shuffled pass.
+Cached Q8/Q6/Q4 outputs matched their corresponding uncached outputs exactly on this set. Q8 was additionally shuffled with no changes. The fresh 40-command Q8 timing sample measured 1.088 s uncached versus 0.350 s cached; the median per-command speedup was 3.114×. Prefix preparation itself took 0.739–0.758 s, separately from model loading. Q6/Q4 cached tests did not repeat the shuffled pass.
 
 ## Per-field accuracy: Q8 + grammar
 
@@ -63,4 +62,4 @@ Grammar ensures allowed output structure, not semantic truth. Small one- or two-
 
 `stay_region` is the weakest Q8 field across all three models; route containment and negation deserve particular attention. Inspect individual failed commands before adding examples: some apparent errors expose schema/label limits. Do not train on this frozen evaluation set. Create a separate development set for changes and a new untouched test set for final validation.
 
-The compressed archive preserves the historical Q5/Q3 experiments and plain-generation comparisons without adding them to the primary execution workflow. No failed numerical run is counted as a model score. See [evidence layout](../evidence/README.md).
+The compressed archive contains the retained baseline, trained, Q8/Q6/Q4, and plain-generation comparisons. No failed numerical run is counted as a model score. See [evidence layout](../evidence/README.md).

@@ -1,4 +1,10 @@
-"""Numerical-health checks and explicit runtime settings for GGUF evaluation."""
+"""
+Checks that the model server is producing valid numerical output before results are
+trusted. It also selects the smaller Granite prompt-processing batch needed on the
+tested Mac setup. A broken server calculation is reported as a runtime failure rather
+than counted as a model misunderstanding.
+"""
+# Previously: gguf_runtime.py
 import math
 import sys
 

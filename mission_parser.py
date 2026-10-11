@@ -13,12 +13,12 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT / 'scripts'))
-from comparison_common import MODELS, ENUMS, FIELDS, parse, sha256
-from build_grammars import grammar
-from gguf_runtime import check_generation, default_ubatch
-from paths import binary
-from quantization_common import artifact_path
+sys.path.insert(0, str(ROOT / 'core'))
+from model_common import MODELS, ENUMS, FIELDS, parse, sha256
+from output_grammar import grammar
+from runtime_checks import check_generation, default_ubatch
+from artifacts import binary
+from artifacts import artifact_path
 
 
 def validate_intent(intent):
@@ -75,12 +75,12 @@ class MissionParser:
             if self.ready:
                 return self
             if not self.binary.is_file():
-                raise FileNotFoundError('Build llama.cpp first: python scripts/setup_llama.py --backend cpu|metal|cuda')
+                raise FileNotFoundError('Build llama.cpp first: python scripts/00_prepare_models.py build --backend cpu|metal|cuda')
             manifest = json.loads(self.gguf.with_suffix('.json').read_text())
             if (manifest['source'] != self.template['source'] or manifest['quantization'] != self.quantization
                     or manifest['gguf_sha256'] != sha256(self.gguf)):
                 raise ValueError('Model identity, quantization, or GGUF hash mismatch')
-            if sha256(ROOT / 'scripts/schema.py') != self.template['schema_sha256']:
+            if sha256(ROOT / 'core/schema.py') != self.template['schema_sha256']:
                 raise ValueError('Runtime prompt belongs to a different schema')
             with socket.socket() as s:
                 s.bind(('127.0.0.1', 0))

@@ -1,12 +1,16 @@
-"""Regression checks for benchmark integrity. No model downloads or training."""
+"""
+Checks the shared comparison rules for all three models, including prompt formatting,
+answer parsing, frozen data, and scoring. These checks help catch changes that would
+make a model comparison unfair.
+"""
 import json
 import unittest
 from unittest.mock import patch
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
-import comparison_common as c
-from build_grammars import grammar
+import model_common as c
+from output_grammar import grammar
 
 
 class ComparisonTests(unittest.TestCase):

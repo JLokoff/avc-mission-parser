@@ -1,4 +1,10 @@
-"""Run with .venv-convert Python. Verify recipe metadata and report actual tensor precision."""
+"""
+Inspects a newly converted model file and reports the types and sizes of its stored
+weights. It verifies the requested conversion format and checks that the full-precision
+source has usable numbers. Step 04 runs it in the converter environment; most users
+never need to call it themselves.
+"""
+# Previously: inspect_study_gguf.py
 import argparse
 import collections
 import json
@@ -7,7 +13,7 @@ from gguf import GGUFReader, LlamaFileType
 
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('path')
-p.add_argument('--expect', required=True, choices=['F32','Q6_K','Q5_K_M','Q4_K_M','Q3_K_M'])
+p.add_argument('--expect', required=True, choices=['F32','Q6_K','Q4_K_M'])
 a=p.parse_args()
 r=GGUFReader(a.path)
 types=collections.Counter(t.tensor_type.name for t in r.tensors)
@@ -27,7 +33,7 @@ if a.expect=='F32':
             raise SystemExit('Nonfinite FP32 source tensor: '+t.name)
     target_present=True
 else:
-    wanted={'Q6_K':'Q6_K','Q5_K_M':'Q5_K','Q4_K_M':'Q4_K','Q3_K_M':'Q3_K'}[a.expect]
+    wanted={'Q6_K':'Q6_K','Q4_K_M':'Q4_K'}[a.expect]
     target_present=bool(types[wanted])
     if not any(name.startswith(('Q','IQ')) for name in types):
         raise SystemExit('Requested quantization produced no quantized tensors')

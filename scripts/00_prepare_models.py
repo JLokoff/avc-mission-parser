@@ -1,20 +1,28 @@
-"""Fetch the pinned llama.cpp revision, apply the converter patch, build locally."""
+"""
+Prepare the models and tools before you train or run them. Choose download to save a
+model on this computer, check to inspect the data and test the selected device without
+training, or build to install the local llama.cpp tools. Run download and check for each
+model; build is needed once per computer.
+"""
+# Previously: setup_llama.py; download/check commands previously lived in compare.py
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'core'))
 import argparse
 import subprocess
-from pathlib import Path
-from paths import ROOT, LLAMA_DIR
+from artifacts import ROOT, LLAMA_DIR
 
 COMMIT = 'b49650adb31f2e49a0d76113aeb1792134fd8413'
 
 def run(*args):
     subprocess.run([str(x) for x in args], check=True)
 
-def main():
+def build_tools(argv):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--backend', choices=['cpu', 'metal', 'cuda'], required=True)
     p.add_argument('--jobs', type=int, default=4)
     p.add_argument('--cuda-arch', help='For example 87 on Jetson Orin; omit on other GPUs')
-    a = p.parse_args()
+    a = p.parse_args(argv)
     if a.jobs < 1:
         p.error('--jobs must be positive')
     if not LLAMA_DIR.exists():
@@ -34,6 +42,16 @@ def main():
     run('cmake', '-S', LLAMA_DIR, '-B', LLAMA_DIR / 'build', '-DCMAKE_BUILD_TYPE=Release', *flags)
     run('cmake', '--build', LLAMA_DIR / 'build', '--config', 'Release',
         '--target', 'llama-server', 'llama-quantize', '--parallel', a.jobs)
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('task', choices=['download', 'check', 'build'], help='Download weights, check a model, or build llama.cpp')
+    a, rest = p.parse_known_args()
+    if a.task == 'build':
+        build_tools(rest)
+    else:
+        from model_workflow import main as model_main
+        model_main([a.task, *rest])
 
 if __name__ == '__main__':
     main()

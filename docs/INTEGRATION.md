@@ -4,13 +4,13 @@ The stable boundary is **human text → parsed intent**. Both interfaces use the
 
 ## Deployment bundle
 
-Keep the repository's `mission_parser.py`, `scripts/`, and `runtime/` together, plus your GGUF and matching conversion JSON manifest. Build llama-server on the target device. The default artifact locations are `gguf/<model>-q8_0.gguf` and `gguf/quantization/<model>-q6_k.gguf` or `-q4_k_m.gguf`.
+Keep the repository's `mission_parser.py`, `scripts/`, `core/`, and `runtime/` together, plus your GGUF and matching conversion JSON manifest. Build llama-server on the target device. The default artifact locations are `gguf/<model>-q8_0.gguf` and `gguf/quantization/<model>-q6_k.gguf` or `-q4_k_m.gguf`.
 
 No trained weights are bundled on GitHub. Retrain from the frozen data or obtain your team's compatible artifacts. The service checks model identity, quantization, schema hash, and GGUF hash before loading. Templates were extracted from the exact original prompt bundles and checked against every saved evaluation prompt.
 
 ## Local HTTP contract
 
-Start `python scripts/serve.py --model granite350 --quantization Q8_0`. It binds only to localhost. This basic HTTP server handles one request at a time, with a single model slot. It has no public-network authentication or TLS layer; put any remote transport in a separate, authenticated application.
+Start `python scripts/06_serve_api.py --model granite350 --quantization Q8_0`. It binds only to localhost. This basic HTTP server handles one request at a time, with a single model slot. It has no public-network authentication or TLS layer; put any remote transport in a separate, authenticated application.
 
 ```http
 POST /parse

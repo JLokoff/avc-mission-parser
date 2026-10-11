@@ -11,7 +11,7 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install torch==2.6.0
 python -m pip install -r requirements-comparison.txt
-python scripts/setup_llama.py --backend metal
+python scripts/00_prepare_models.py build --backend metal
 python -m venv .venv-convert
 .venv-convert/bin/python -m pip install -r requirements-converter.txt
 ```
@@ -29,7 +29,7 @@ python -m ensurepip --upgrade
 python -m pip install --upgrade pip
 python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 python -m pip install -r requirements-comparison.txt
-python scripts/setup_llama.py --backend cpu
+python scripts/00_prepare_models.py build --backend cpu
 python -m venv .venv-convert
 .venv-convert\Scripts\python.exe -m pip install -r requirements-converter.txt
 ```
@@ -45,8 +45,8 @@ WSL2 uses the Linux commands and paths. Keep the whole environment within WSL; d
 Use a JetPack image with a working CUDA toolkit and C++ compiler. Install Git, CMake, Python, and build tools from the platform package manager. To deploy a model already trained elsewhere:
 
 ```bash
-python3 scripts/setup_llama.py --backend cuda --cuda-arch 87 --jobs 2
-python3 scripts/serve.py --model granite350 --quantization Q6_K --gguf /path/to/granite350-q6_k.gguf
+python3 scripts/00_prepare_models.py build --backend cuda --cuda-arch 87 --jobs 2
+python3 scripts/06_serve_api.py --model granite350 --quantization Q6_K --gguf /path/to/granite350-q6_k.gguf
 ```
 
 Copy the matching `granite350-q6_k.json` conversion manifest beside the GGUF. Clone the repository for its Python code, runtime templates, and grammars. No training environment is required for this path. `--jobs 2` limits build memory pressure. Actual speed depends on power mode, cooling, background perception workloads, and the Jetson SKU.

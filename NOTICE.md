@@ -8,7 +8,7 @@ This repository packages the user's AVC comparison work. Original Schema V3 defi
 
 The supplied source snapshot did not contain a LICENSE file. This publication preserves attribution and does not assert a new blanket license over that material. Public visibility is not itself an open-source license. Obtain the relevant authors' permission before redistribution or reuse that requires it; a repository-wide license should only be added by the rights holders.
 
-The current package preserves `scripts/schema.py` and the datasets unchanged. Comparison, conversion, benchmarking, prefix-reuse, runtime integration, and documentation adaptations are identified in the README and Git history. Historical result provenance is retained in the compressed evidence archive; local usernames/absolute paths are sanitized for publication.
+The current package preserves `core/schema.py` and the datasets unchanged. Comparison, conversion, benchmarking, prefix-reuse, runtime integration, and documentation adaptations are identified in the README and Git history. Historical result provenance is retained in the compressed evidence archive; local usernames/absolute paths are sanitized for publication.
 
 Model weights and trained adapters are excluded. Their model-specific terms continue to apply:
 

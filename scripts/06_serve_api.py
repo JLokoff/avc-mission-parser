@@ -1,9 +1,16 @@
-"""Local HTTP API: GET /health, POST /parse with {\"text\": \"...\"}."""
+"""
+Keep one trained model running on this computer so another program can send it mission
+commands. Send a text command to the local /parse address and receive the six mission
+fields or an error. The model stays loaded between requests; the server interprets
+commands but never flies the drone or changes the mission itself.
+"""
+# Previously: serve.py
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'core'))
 import argparse
 import json
-import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mission_parser import MissionParser
 

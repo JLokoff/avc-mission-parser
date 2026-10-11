@@ -1,4 +1,9 @@
-"""Small model-specific adaptations around the original schema and scoring."""
+"""
+Keeps the three models on the same comparison rules. It prepares their differently
+formatted prompts, reads their answers, verifies the frozen datasets, and calculates the
+scores. The public workflow uses these helpers automatically.
+"""
+# Previously: comparison_common.py
 import ast
 import hashlib
 import json
@@ -66,7 +71,7 @@ def verify_data():
     if train_texts & evaluation_texts:
         raise ValueError("Training/evaluation command overlap")
     source = json.loads((ROOT / "source-v3.json").read_text())
-    if sha256(ROOT / "scripts" / "schema.py") != source["schema_sha256"]:
+    if sha256(ROOT / "core" / "schema.py") != source["schema_sha256"]:
         raise ValueError("Schema differs from the locked V3 source")
     return expected
 

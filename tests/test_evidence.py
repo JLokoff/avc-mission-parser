@@ -1,8 +1,13 @@
+"""
+Recalculates every published score and timing summary from the saved individual answers.
+This makes sure the concise results tables and archived evidence remain consistent after
+editing or filtering.
+"""
 import gzip
 import json
 import unittest
 from pathlib import Path
-from comparison_common import summarize
+from model_common import summarize
 
 class EvidenceTests(unittest.TestCase):
     def test_published_summaries_match_archived_predictions(self):

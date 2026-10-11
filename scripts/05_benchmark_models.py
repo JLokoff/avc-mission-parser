@@ -1,8 +1,13 @@
-"""Benchmark a V3 GGUF. Starts/stops its own server by default; --external-server uses yours.
-
-Only standard-library dependencies; prompt token IDs were saved at export. No
-training, data regeneration, or semantic correction occurs here.
 """
+Test a finished GGUF model on the evaluation commands and save its correctness and
+response times. You can require the expected answer format with --grammar and prepare
+the shared instructions in advance with --cache-prefix. This step starts and stops its
+own local model server, so it can be repeated without training or converting again.
+"""
+# Previously: 04_benchmark_gguf.py
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'core'))
 import argparse
 import json
 import socket
@@ -10,12 +15,11 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
-from pathlib import Path
 
-from comparison_common import ROOT, MODELS, EVAL_FILES, sha256, verify_data, eval_rows, scored_row, summarize, write_json
-from gguf_workflow import SERVER, llama_version
-from gguf_runtime import NUMERIC_CHECK, check_generation, default_ubatch
-from quantization_common import QUANTS, artifact_path, atomic_json
+from model_common import ROOT, MODELS, EVAL_FILES, sha256, verify_data, eval_rows, scored_row, summarize, write_json
+from gguf_conversion import SERVER, llama_version
+from runtime_checks import NUMERIC_CHECK, check_generation, default_ubatch
+from artifacts import QUANTS, artifact_path, atomic_json
 
 
 def request(port, route, payload=None):
@@ -38,9 +42,9 @@ def benchmark(args):
     bundle = json.loads(bundle_path.read_text())
     quant = getattr(args, 'quantization', 'Q8_0')
     if quant != 'Q8_0':
-        from quantize import verify_artifact
+        from quantization import verify_artifact
         if not verify_artifact(args.model, quant):
-            raise ValueError('Missing verified quantization; run scripts/quantize.py first')
+            raise ValueError('Missing verified quantization; run scripts/04_prepare_gguf.py first')
     manifest_path = artifact_path(args.model, quant).with_suffix('.json')
     manifest = json.loads(manifest_path.read_text())
     gguf = artifact_path(args.model, quant)

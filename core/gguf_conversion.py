@@ -1,4 +1,10 @@
-"""Prepare verified Q8_0 GGUF files from the completed LoRA comparison runs."""
+"""
+Handles the model-specific details needed to turn a trained model into a usable GGUF
+file. It checks the training record and converter version, prepares compatible model
+settings, and creates the Q8 file with a record of its source. Step 04 calls this
+automatically.
+"""
+# Previously: gguf_workflow.py
 import argparse
 import hashlib
 import json
@@ -7,10 +13,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from comparison_common import ROOT, MODELS, sha256, verify_data, write_json
+from model_common import ROOT, MODELS, sha256, verify_data, write_json
 
 MODEL_KEYS = list(MODELS)
-from paths import LLAMA_DIR, CONVERTER_PYTHON, binary
+from artifacts import LLAMA_DIR, CONVERTER_PYTHON, binary
 CONVERTER = LLAMA_DIR / "convert_hf_to_gguf.py"
 SERVER = binary('llama-server')
 EXPECTED_TAG = "b11026"
@@ -31,7 +37,7 @@ def completed_run(key):
         raise SystemExit(f"Training run is not a completed full run: {path}")
     if value["datasets"] != verify_data():
         raise SystemExit(f"Dataset lock differs from training run: {path}")
-    from compare import source_path
+    from model_workflow import source_path
     if value["source"] != json.loads((source_path(key) / "source.json").read_text()):
         raise ValueError("Base revision differs from training")
     if value["adapter_sha256"] != sha256(path.parent / "adapter_model.safetensors"):
@@ -191,7 +197,7 @@ def convert(args):
     if merged.exists() and not prompts.exists():
         raise SystemExit("Partial export detected. Preserve it and inspect before continuing: " + str(merged))
     if not merged.exists():
-        run([sys.executable, ROOT / "scripts" / "compare.py", "export", "--model", args.model,
+        run([sys.executable, ROOT / "core" / "model_workflow.py", "export", "--model", args.model,
              "--device", "cpu", "--threads", str(args.threads)])
     if json.loads((merged / "training-run.json").read_text()) != training:
         raise ValueError("Merged checkpoint belongs to a different training run")
@@ -236,34 +242,3 @@ def convert(args):
     print(json.dumps(info, indent=2))
     print("Created:", output)
     print("Next: benchmark all 792 V3 examples before judging the converted model.")
-
-
-def status(_args):
-    rows = []
-    for key in MODEL_KEYS:
-        path = ROOT / "gguf" / f"{key}-q8_0.gguf"
-        manifest = ROOT / "gguf" / f"{key}-q8_0.json"
-        row = {"model": key, "created": path.exists(), "manifest": manifest.exists()}
-        if path.exists():
-            row.update({"bytes": path.stat().st_size,
-                        "decimal_gb": round(path.stat().st_size / DECIMAL_GB, 3),
-                        "under_1gb": path.stat().st_size <= DECIMAL_GB})
-        rows.append(row)
-    print(json.dumps(rows, indent=2))
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("check", help="Verify completed training runs and the pinned converter").set_defaults(fn=check)
-    convert_parser = sub.add_parser("convert", help="Merge one adapter and create its Q8_0 GGUF")
-    convert_parser.add_argument("--model", choices=MODEL_KEYS, required=True)
-    convert_parser.add_argument("--threads", type=int, default=8)
-    convert_parser.set_defaults(fn=convert)
-    sub.add_parser("status", help="List Q8_0 files, exact sizes and 1 GB status").set_defaults(fn=status)
-    args = parser.parse_args()
-    args.fn(args)
-
-
-if __name__ == "__main__":
-    main()

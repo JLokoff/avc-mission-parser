@@ -1,4 +1,8 @@
-"""Exercise the scoring path with simulated server responses; no model inference."""
+"""
+Checks that unusable model-server calculations stop a benchmark, while ordinary wrong
+answers are still scored as wrong. It uses made-up server replies and does not run a
+real model.
+"""
 import importlib.util
 import io
 import json
@@ -9,7 +13,7 @@ import unittest
 from unittest.mock import patch
 import urllib.error
 
-spec = importlib.util.spec_from_file_location('benchmark_numeric', Path(__file__).resolve().parents[1] / 'scripts/04_benchmark_gguf.py')
+spec = importlib.util.spec_from_file_location('benchmark_numeric', Path(__file__).resolve().parents[1] / 'scripts/05_benchmark_models.py')
 b = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(b)
 

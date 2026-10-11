@@ -59,8 +59,8 @@ FunctionGemma requires accepting Google's terms on its [Hugging Face page](https
 
 ```bash
 hf auth login
-python scripts/run_pipeline.py download
-python scripts/run_pipeline.py check --device cpu
+python scripts/07_run_workflow.py download
+python scripts/07_run_workflow.py check --device cpu
 ```
 
 Never put access tokens in code. Downloads use revisions in `model-lock.json`. All pipeline commands accept `--models granite350`, `--models lfm350`, or `--models functiongemma` to select one model. Otherwise they run all three sequentially and stop at the first failure.
@@ -70,10 +70,10 @@ Never put access tokens in code. Downloads use revisions in `model-lock.json`. A
 Run baseline evaluation on CPU to match the archived PyTorch reference:
 
 ```bash
-python scripts/run_pipeline.py baseline --device cpu
-python scripts/run_pipeline.py train --device mps --smoke
-python scripts/run_pipeline.py train --device mps
-python scripts/run_pipeline.py evaluate --device cpu
+python scripts/07_run_workflow.py baseline --device cpu
+python scripts/07_run_workflow.py train --device mps --smoke
+python scripts/07_run_workflow.py train --device mps
+python scripts/07_run_workflow.py evaluate --device cpu
 ```
 
 Replace `mps` with `cuda` for a supported NVIDIA GPU or `cpu` for CPU training. `--smoke` runs only two optimizer steps on eight rows and saves separate smoke checkpoints. It must not be used for final evaluation.
@@ -85,7 +85,7 @@ The dataset contains **2,932 training rows representing 1,551 normalized unique 
 Resume an interrupted full training run with an existing checkpoint:
 
 ```bash
-python scripts/02_finetune_lora.py --model granite350 --device mps --threads 8 --resume checkpoints/granite350-lora/checkpoint-252
+python scripts/02_train_model.py --model granite350 --device mps --threads 8 --resume checkpoints/granite350-lora/checkpoint-252
 ```
 
 `252` is an example. Resume requires matching data, settings, source weights, and training code. Completed output directories are protected from accidental overwrite. Keep several GB free for each merged export and allow additional space for FP32 GGUF masters; 15 GB of working space is a reasonable starting allowance for all three beyond downloaded dependencies.
@@ -93,7 +93,7 @@ python scripts/02_finetune_lora.py --model granite350 --device mps --threads 8 -
 ## 3. Build the inference/conversion tools
 
 ```bash
-python scripts/setup_llama.py --backend metal
+python scripts/00_prepare_models.py build --backend metal
 python -m venv .venv-convert
 .venv-convert/bin/python -m pip install -r requirements-converter.txt
 ```
@@ -105,27 +105,26 @@ The setup script pins llama.cpp to `b11026` / `b49650adb31f2e49a0d76113aeb179213
 ## 4. Merge and quantize
 
 ```bash
-python scripts/run_pipeline.py export
-python scripts/run_pipeline.py quantize --quants Q8_0 Q6_K Q4_K_M
+python scripts/07_run_workflow.py quantize --quants Q8_0 Q6_K Q4_K_M
 ```
 
 Merging combines the original model weights with the learned LoRA update into a standalone FP32 model. It is required before GGUF conversion; it does not combine different models or datasets.
 
 - **Q8_0:** convert the merged FP32 checkpoint directly into a Q8 GGUF.
 - **Q6_K / Q4_K_M:** create an FP32 GGUF master from that same merged checkpoint and independently quantize it to each format. **Q8 is never used as the input for lower-bit conversion.**
-- K-quant formats use blocks and mixed tensor precisions. “Q4” does not mean every tensor is exactly four bits. `inspect_study_gguf.py` checks format metadata and reports actual tensor types.
+- K-quant formats use blocks and mixed tensor precisions. “Q4” does not mean every tensor is exactly four bits. `core/inspect_gguf.py` checks format metadata and reports actual tensor types.
 
 Existing artifacts are hash-checked and preserved. Interrupted `.partial` files require inspection before retrying. No training occurs during quantization. Single-model example:
 
 ```bash
-python scripts/quantize.py --model granite350 --quants Q8_0 Q6_K Q4_K_M
+python scripts/04_prepare_gguf.py --model granite350 --quants Q8_0 Q6_K Q4_K_M
 ```
 
 ## 5. Evaluate GGUF and prefix reuse
 
 ```bash
-python scripts/run_pipeline.py benchmark --quants Q8_0 Q6_K Q4_K_M
-python scripts/run_pipeline.py benchmark --models granite350 --quants Q8_0 Q6_K Q4_K_M --cache-prefix
+python scripts/07_run_workflow.py benchmark --quants Q8_0 Q6_K Q4_K_M
+python scripts/07_run_workflow.py benchmark --models granite350 --quants Q8_0 Q6_K Q4_K_M --cache-prefix
 ```
 
 Use `--gpu-layers 0` for CPU-only execution. Add `--limit 5` for a partial installation check; omit it for a 792-command score. Results go to ignored `results/` folders with unique labels. The published reference results live separately in `evidence/`.
@@ -133,7 +132,7 @@ Use `--gpu-layers 0` for CPU-only execution. Add `--limit 5` for a partial insta
 The pipeline benchmarks use grammar-constrained generation. To measure plain generation, run the underlying script without `--grammar`:
 
 ```bash
-python scripts/04_benchmark_gguf.py --model granite350 --quantization Q8_0 --label granite-q8-plain
+python scripts/05_benchmark_models.py --model granite350 --quantization Q8_0 --label granite-q8-plain
 ```
 
 **Grammar** restricts output structure and enum values; it does not guarantee the intended meaning. Prefix reuse saves the model's computed fixed instructions. Each request still contains the full prompt and only the new command, with no preceding commands appended as chat history.
@@ -145,7 +144,7 @@ Granite's 552-token prefix was validated on all 792 examples, including a shuffl
 After training/conversion, start a persistent service:
 
 ```bash
-python scripts/serve.py --model granite350 --quantization Q8_0
+python scripts/06_serve_api.py --model granite350 --quantization Q8_0
 ```
 
 In a second terminal:
@@ -190,33 +189,33 @@ Granite after prefix preparation:
 
 Q6 is a useful Granite size/speed tradeoff in this dataset: one fewer correct example than Q8. Q4 loses 22 correct examples versus Q8. This is one trained checkpoint per model, not a multi-seed statistical ranking. Baseline scores measure exact native function-call compliance as well as semantic extraction; zero exact matches is not zero language understanding.
 
-The [results guide](docs/RESULTS.md) contains all three Q8/Q6/Q4 comparisons, field-level errors, timing definitions, and caveats. Detailed successful runs—including historical Q5/Q3 and plain-generation experiments—are compressed in one archive, keeping the repository browsable. Smoke tests, failed numeric runs, duplicate logs, and model binaries are excluded.
+The [results guide](docs/RESULTS.md) contains all three Q8/Q6/Q4 comparisons, field-level errors, timing definitions, and caveats. Detailed successful baseline, trained, Q8/Q6/Q4, and plain-generation runsare compressed in one archive, keeping the repository browsable. Smoke tests, failed numeric runs, duplicate logs, and model binaries are excluded.
 
-## File guide
+## Numbered workflow
 
-| File | Purpose |
+The scripts below are the files you normally run. Steps 00–05 prepare and measure a model; 06 deploys it. Steps 07–09 are optional shortcuts and checks, not additional training stages. Each script starts with a plain-language explanation and its previous filename.
+
+| Step | What it does |
 |---|---|
-| `scripts/run_pipeline.py` | Run a selected stage sequentially across the three models |
-| `scripts/compare.py` | Download, preflight, train, PyTorch evaluate, FP32 merge/export |
-| `00_zeroshot_baseline.py`, `02_finetune_lora.py`, `03_evaluate.py`, `05_merge_for_gguf.py` | Thin wrappers around that shared implementation |
-| `scripts/schema.py` | Frozen V3 definitions from the source project |
-| `scripts/comparison_common.py` | Native prompts, strict parsing, masking, metrics, dataset checks |
-| `scripts/setup_llama.py` | Pinned source checkout, patch, CPU/Metal/CUDA build |
-| `scripts/gguf_workflow.py` | Q8 conversion and compatibility preparation |
-| `scripts/quantize.py` | Verified independent FP32-to-Q6/Q4 conversion |
-| `scripts/inspect_study_gguf.py` | Inspect actual tensor precision and reject nonfinite FP32 masters |
-| `scripts/04_benchmark_gguf.py` | GGUF accuracy/latency evaluation; optional grammar and prefix preparation |
-| `scripts/build_grammars.py`, `scripts/gguf_runtime.py` | Generate native grammars; detect numeric backend failures |
-| `mission_parser.py`, `scripts/serve.py` | Python interface and localhost HTTP wrapper |
-| `runtime/`, `gguf/*.gbnf` | Exact fixed templates and generated native output grammars |
-| `data/`, `dataset-lock.json`, `model-lock.json`, `source-v3.json` | Frozen inputs and provenance |
-| `evidence/` | Compact summaries and compressed per-command reference results |
+| `00_prepare_models.py` | Prepare the models and tools before you train or run them. |
+| `01_evaluate_baseline.py` | Measure how the original downloaded model performs before training. |
+| `02_train_model.py` | Teach one selected model to turn mission commands into the six Schema V3 fields. |
+| `03_evaluate_trained.py` | Measure the model after training using the same evaluation commands as the baseline. |
+| `04_prepare_gguf.py` | Create smaller model files that can run in llama.cpp. |
+| `05_benchmark_models.py` | Test a finished GGUF model on the evaluation commands and save its correctness and response times. |
+| `06_serve_api.py` | Keep one trained model running on this computer so another program can send it mission commands. |
+| `07_run_workflow.py` | Run one workflow stage for all three models in succession, or only the models you select. |
+| `08_view_results.py` | Read the published reference results without unpacking a folder full of logs. |
+| `09_check_project.py` | Check that the repository still works after a code change. |
+
+Shared code lives in `core/` so the same logic is not copied into every script. The [complete file guide](docs/FILES.md) explains every remaining source, data, configuration, and evidence file. Conversion now includes merging; there is no separate merge command to remember. Benchmarking stays separate so you can measure an existing model without recreating it.
+
+**Existing users:** the schema, data, model settings, and existing GGUF files have not changed. Use the new script names below. Old unfinished training runs should be resumed with the code that created them; the training-code check intentionally rejects resuming under this reorganized version. Completed adapters and compatible GGUF files can still be reused.
 
 ## Checks and troubleshooting
 
 ```bash
-python scripts/test_all.py
-python tests/test_schema_v3.py
+python scripts/09_check_project.py
 ```
 
 These offline tests cover schema/data integrity, output parsing, numerical checks, port handling, and the HTTP contract. GitHub Actions runs them on macOS, Ubuntu, and Windows; that is not a GPU hardware certification.
@@ -226,7 +225,7 @@ These offline tests cover schema/data integrity, output parsing, numerical check
 - **LFM convolution fallback on Mac:** expected; its CUDA-only optimized kernel is not needed for this workflow.
 - **Granite Metal nonfinite output:** retain the automatic microbatch of 8 on Mac GPU; larger values produced broken logits in the pinned build. The benchmark stops on numeric failures.
 - **MPS evaluation abort:** use CPU for the PyTorch reference and Metal llama.cpp for deployment evaluation.
-- **Address in use:** private inference/benchmark servers select an available port. Change `serve.py --port` if the public-facing localhost API port is occupied.
+- **Address in use:** private inference/benchmark servers select an available port. Change `06_serve_api.py --port` if the public-facing localhost API port is occupied.
 - **Model import/version errors:** use the separate pinned training and converter environments. Do not install converter requirements into the training environment.
 
 ## Attribution and model terms

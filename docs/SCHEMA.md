@@ -1,6 +1,6 @@
 # Frozen Schema V3
 
-`scripts/schema.py` is preserved byte-for-byte and checked against `source-v3.json`. Do not confuse this implemented schema with earlier proposed property trees.
+`core/schema.py` is preserved byte-for-byte and checked against `source-v3.json`. Do not confuse this implemented schema with earlier proposed property trees.
 
 | Field | Allowed values | Meaning |
 |---|---|---|

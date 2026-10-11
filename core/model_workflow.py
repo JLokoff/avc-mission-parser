@@ -1,7 +1,10 @@
-"""Adapted from the supplied 02_finetune_lora.py and 03_evaluate.py.
-
-Run from the package root. Heavy dependencies are imported only when needed.
 """
+Provides the shared download, model checks, training, evaluation, and merging used by
+the numbered steps. Keeping these operations together means all three models receive the
+same experiment settings. Normally run a numbered script instead of running this support
+file directly.
+"""
+# Previously: compare.py, adapted from upstream 02_finetune_lora.py and 03_evaluate.py
 import argparse
 import importlib.metadata
 import json
@@ -10,13 +13,13 @@ import platform
 import time
 from pathlib import Path
 
-from comparison_common import (ROOT, MODELS, FIELDS, verify_data, read_rows, prompt,
+from model_common import (ROOT, MODELS, FIELDS, verify_data, read_rows, prompt,
                                completion, masked_example, stop_tokens, call_tokens, summarize,
                                scored_row, write_json, sha256, eval_rows, EVAL_FILES, MAX_NEW_TOKENS)
 
 
 def code_fingerprint():
-    return {name: sha256(ROOT / "scripts" / name) for name in ["schema.py", "comparison_common.py", "compare.py"]}
+    return {name: sha256(ROOT / "core" / name) for name in ["schema.py", "model_common.py", "model_workflow.py"]}
 
 
 def result_path(args):
@@ -56,7 +59,7 @@ def download(args):
 def source_path(key):
     path = ROOT / "models" / key
     if not (path / "source.json").exists():
-        raise SystemExit(f"First run: python scripts/compare.py download --model {key}")
+        raise SystemExit(f"First run: python scripts/00_prepare_models.py download --model {key}")
     wanted = json.loads((ROOT / "model-lock.json").read_text())[key]
     if json.loads((path / "source.json").read_text()) != wanted:
         raise ValueError("Base model revision differs from model-lock.json")
@@ -272,7 +275,7 @@ def evaluate(args):
         return tokenizer.decode(generated, skip_special_tokens=False), elapsed, len(generated)
     if args.text:
         raw, seconds, count = generate(args.text)
-        from comparison_common import parse
+        from model_common import parse
         print(json.dumps({"raw_output": raw, "parsed": parse(args.model, raw), "seconds": seconds, "tokens": count}, indent=2))
         return
     rows = eval_rows(args.eval_set)

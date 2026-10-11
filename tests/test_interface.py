@@ -1,3 +1,8 @@
+"""
+Checks the Python and local HTTP interfaces that another team program would call. It
+verifies accepted commands, rejected inputs, and response formats using a fake model so
+no training or model download is required.
+"""
 import json
 import threading
 import unittest
@@ -6,8 +11,13 @@ import urllib.request
 from http.server import HTTPServer
 from types import SimpleNamespace
 from mission_parser import validate_command, validate_intent, MissionParser
-from serve import make_handler
-from comparison_common import eval_rows
+import importlib.util
+from pathlib import Path
+spec = importlib.util.spec_from_file_location('serve', Path(__file__).resolve().parents[1] / 'scripts/06_serve_api.py')
+serve = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(serve)
+make_handler = serve.make_handler
+from model_common import eval_rows
 
 class InterfaceTests(unittest.TestCase):
     def test_reject_invalid_intents(self):
@@ -53,3 +63,42 @@ class InterfaceTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
             thread.join()
+
+    def test_prefix_reuse_sends_complete_fresh_commands_for_every_model(self):
+        from unittest.mock import patch
+        from model_common import MODELS, completion
+        expected = eval_rows()[0]['expected']
+        for key in MODELS:
+            for quant in ('Q8_0', 'Q6_K', 'Q4_K_M'):
+                with self.subTest(model=key, quantization=quant):
+                    p = MissionParser(key, quant, cache_prefix=True)
+                    p.ready = True
+                    p.process = SimpleNamespace(poll=lambda: None)
+                    p.prefix_ids = [10]
+                    with patch.object(p, 'tokenize', return_value=[10, 20]) as tokenize, patch.object(p, 'request', return_value={'content': completion(key, expected)}) as request:
+                        p.prepare_prefix()
+                        first = request.call_args.args[1]
+                        self.assertEqual(first['prompt'], [10])
+                        self.assertFalse(first['cache_prompt'])
+                        self.assertNotIn('grammar', first)
+                        for text in ('Collect blue.', 'Pause.'):
+                            self.assertTrue(p.parse(text)['ok'])
+                            tokenize.assert_called_with(p.template['prefix'] + text + p.template['suffix'])
+                            sent = request.call_args.args[1]
+                            self.assertEqual(sent['prompt'], [10, 20])
+                            self.assertTrue(sent['cache_prompt'])
+                            self.assertIn('grammar', sent)
+
+    def test_incomplete_outputs_never_become_mission_intents(self):
+        from unittest.mock import patch
+        from model_common import MODELS, completion
+        for key in MODELS:
+            with self.subTest(model=key):
+                p = MissionParser(key)
+                p.ready = True
+                p.process = SimpleNamespace(poll=lambda: None)
+                p.prefix_ids = [1]
+                with patch.object(p, 'tokenize', return_value=[1, 2]), patch.object(p, 'request', return_value={'content': completion(key, eval_rows()[0]['expected']), 'stopped_limit': True}):
+                    result = p.parse('Collect blue.')
+                    self.assertFalse(result['ok'])
+                    self.assertIsNone(result['intent'])

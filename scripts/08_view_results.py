@@ -1,8 +1,15 @@
-"""List archived runs or print only a selected run's wrong answers."""
+"""
+Read the published reference results without unpacking a folder full of logs. By default
+this lists each saved run and its score and speed. Select a run to see its full details,
+or add --wrong-only to inspect the commands that model answered incorrectly.
+"""
+# Previously: read_evidence.py
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'core'))
 import argparse
 import gzip
 import json
-from pathlib import Path
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)

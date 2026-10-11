@@ -1,14 +1,20 @@
-"""Create Q8 directly from merged weights; Q6/Q4 independently from one FP32 GGUF."""
+"""
+Coordinates the combined merge and quantization step. It checks that the trained model,
+saved prompts, and existing files belong together, then creates Q8 or a full-precision
+master for independent Q6 and Q4 conversion. An incomplete or mismatched file stops the
+process rather than being silently reused.
+"""
+# Previously: quantize.py and the former merge entry point
 import argparse
 import json
 import shutil
 import subprocess
 import sys
-from comparison_common import ROOT, MODELS, sha256, verify_data
-from gguf_workflow import (convert, completed_run, require_tools, prepare_model_config_for_converter,
+from model_common import ROOT, MODELS, sha256, verify_data
+from gguf_conversion import (convert, completed_run, require_tools, prepare_model_config_for_converter,
                            prepare_tokenizer_for_converter, CONVERTER, CONVERTER_PYTHON, llama_version)
-from quantization_common import artifact_path, atomic_json
-from paths import binary
+from artifacts import artifact_path, atomic_json
+from artifacts import binary
 
 def verify_artifact(key, quant, require_training=False):
     output = artifact_path(key, quant)
@@ -33,11 +39,13 @@ def main():
     p.add_argument('--quants', nargs='+', choices=['Q8_0', 'Q6_K', 'Q4_K_M'], default=['Q8_0', 'Q6_K', 'Q4_K_M'])
     p.add_argument('--threads', type=int, default=8)
     a = p.parse_args()
+    if a.threads < 1:
+        p.error('--threads must be positive')
     training = completed_run(a.model)
     version = require_tools()
     merged = ROOT / 'merged' / a.model
     if not merged.exists():
-        subprocess.run([sys.executable, str(ROOT / 'scripts/compare.py'), 'export', '--model', a.model], check=True)
+        subprocess.run([sys.executable, str(ROOT / 'core/model_workflow.py'), 'export', '--model', a.model], check=True)
     if json.loads((merged / 'training-run.json').read_text()) != training:
         raise ValueError('Merged export belongs to another training run')
     weights = json.loads((merged / 'export-metadata.json').read_text())
@@ -71,7 +79,7 @@ def main():
         if partial.exists():
             raise RuntimeError(f'Inspect previous incomplete conversion: {partial}')
         subprocess.run([str(x) for x in command(partial)], check=True)
-        subprocess.run([str(CONVERTER_PYTHON), str(ROOT / 'scripts/inspect_study_gguf.py'),
+        subprocess.run([str(CONVERTER_PYTHON), str(ROOT / 'core/inspect_gguf.py'),
                         str(partial), '--expect', quant], check=True)
         atomic_json(output.with_suffix('.json.partial'), {**identity, 'quantization': quant,
                     'gguf_sha256': sha256(partial), 'gguf_bytes': partial.stat().st_size, **(extra or {})})

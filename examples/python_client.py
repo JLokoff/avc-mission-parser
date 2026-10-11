@@ -1,4 +1,9 @@
-"""Run from repository root: python -m examples.python_client"""
+"""
+Load a local model through the Python interface, interpret two example commands, and
+print the results. Run python -m examples.python_client from the repository root. This
+demonstrates keeping one model loaded for several commands; it does not issue any flight
+commands.
+"""
 from mission_parser import MissionParser
 
 with MissionParser(model='granite350', quantization='Q8_0') as parser:
